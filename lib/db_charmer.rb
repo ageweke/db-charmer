@@ -1,4 +1,4 @@
-puts "Loading DbCharmer..."
+#puts "Loading DbCharmer..."
 
 module DbCharmer
   @@migration_connections_should_exist = Rails.env.production?
@@ -21,7 +21,7 @@ module DbCharmer
   end
 end
 
-puts "Extending AR..."
+#puts "Extending AR..."
 
 require 'db_charmer/active_record_extensions'
 require 'db_charmer/connection_factory'
@@ -44,7 +44,7 @@ ActiveRecord::Base.extend(DbCharmer::MultiDbProxy::MasterSlaveClassMethods)
 # Enable connection proxy for associations
 ActiveRecord::Associations::AssociationProxy.send(:include, DbCharmer::AssociationProxy::InstanceMethods)
 
-puts "Doing the magic..."
+#puts "Doing the magic..."
 
 require 'db_charmer/db_magic'
 require 'db_charmer/finder_overrides'
