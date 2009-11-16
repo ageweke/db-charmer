@@ -5,10 +5,11 @@ module DbCharmer
       
       def initialize(config)
         @config = config
-        @sharder = self.construct_sharder
+        @sharder = self.instantiate_sharder
       end
       
-      def construct_sharder
+      def instantiate_sharder
+        raise ArgumentError, "No :method passed!" unless config[:method]
         sharder_class_name = "DbCharmer::Sharding::Method::#{config[:method].to_s.classify}"
         sharder_class = sharder_class_name.constantize
         sharder_class.new(config)
