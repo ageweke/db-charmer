@@ -61,12 +61,12 @@ module DbCharmer
 
       #-----------------------------------------------------------------------------
       def hijack_connection!
-        # FIXME: make sure we do not do it more often then needed
-#        puts "DEBUG: Hijacking connection for #{self.to_s}"
-        class << self 
-          def connection
-            db_charmer_connection_proxy || super
+        return if self.respond_to?(:connection_with_magic)
+        class << self
+          def connection_with_magic
+            db_charmer_connection_proxy || connection_without_magic
           end
+          alias_method_chain :connection, :magic
         end
       end
 
