@@ -1,16 +1,20 @@
 module DbCharmer
   module MultiDbProxy
     class OnDbProxy < BlankSlate
-      def initialize(model_class, slave)
-        @model = model_class
+      def initialize(proxy_target, slave)
+        @proxy_target = proxy_target
         @slave = slave
       end
 
     private
 
       def method_missing(meth, *args, &block)
-        @model.on_db(@slave) do |m|
-          m.__send__(meth, *args, &block)
+        # Switch connection and proxy the method call
+        @proxy_target.on_db(@slave) do |m|
+          res = m.__send__(meth, *args, &block)
+
+          # If result is a scope/association, return a new proxy for it, otherwise return the result itself
+          (res.proxy?) ? OnDbProxy.new(res, @slave) : res
         end
       end
     end
@@ -18,7 +22,7 @@ module DbCharmer
     module ClassMethods
       def on_db(con, proxy_target = nil)
         proxy_target ||= self
-        
+
         # Chain call
         return OnDbProxy.new(proxy_target, con) unless block_given?
 
@@ -34,7 +38,14 @@ module DbCharmer
         end
       end
     end
-    
+
+    module InstanceMethods
+      def on_db(con, proxy_target = nil, &block)
+        proxy_target ||= self
+        self.class.on_db(con, proxy_target, &block)
+      end
+    end
+
     module MasterSlaveClassMethods
       def on_slave(con = nil, proxy_target = nil, &block)
         con ||= db_charmer_random_slave
