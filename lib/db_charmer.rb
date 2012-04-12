@@ -220,3 +220,6 @@ class ::ActiveRecord::Base
     alias_method_chain :inherited, :hijacking
   end
 end
+
+# Include the railtie file so that rake tasks are added
+require 'db_charmer/railtie' if defined?(Rails)
