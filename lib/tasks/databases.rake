@@ -31,7 +31,7 @@ namespace :db_charmer do
     config.each_value do | sub_config |
       next unless sub_config.is_a?(Hash)
       next unless sub_config['database']
-      next if config['exclude_from_rake_create_drop']
+      next if sub_config['exclude_from_rake_create_drop']
       create_database(sub_config)
     end
   end
@@ -74,7 +74,7 @@ def drop_core_and_sub_database(config)
   config.each_value do | sub_config |
     next unless sub_config.is_a?(Hash)
     next unless sub_config['database']
-    next if config['exclude_from_rake_create_drop']
+    next if sub_config['exclude_from_rake_create_drop']
     begin
       drop_database(sub_config)
     rescue
