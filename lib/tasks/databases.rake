@@ -21,16 +21,17 @@ namespace :db_charmer do
     end
   end
 
-  desc 'Create the databases defined in config/database.yml for the current RAILS_ENV'
+  desc 'Create the databases defined in config/database.yml based on RAILS_ENV.'
   task :create => "db:load_config" do
-    create_core_and_sub_database(ActiveRecord::Base.configurations[RAILS_ENV])
+    configs_for_environment.each { |config| create_core_and_sub_database(config) }
   end
 
   def create_core_and_sub_database(config)
-    create_database(config)
+    create_database(config) unless config['exclude_from_rake_create_drop']
     config.each_value do | sub_config |
       next unless sub_config.is_a?(Hash)
       next unless sub_config['database']
+      next if sub_config['exclude_from_rake_create_drop']
       create_database(sub_config)
     end
   end
@@ -47,13 +48,14 @@ namespace :db_charmer do
     end
   end
 
-  desc 'Drops the database for the current RAILS_ENV'
+  desc 'Drops the database based on RAILS_ENV'
   task :drop => "db:load_config" do
-    config = ::ActiveRecord::Base.configurations[RAILS_ENV || 'development']
-    begin
-      drop_core_and_sub_database(config)
-    rescue Exception => e
-      puts "Couldn't drop #{config['database']} : #{e.inspect}"
+    configs_for_environment.each do |config|
+      begin
+        drop_core_and_sub_database(config)
+      rescue Exception => e
+        puts "Couldn't drop #{config['database']} : #{e.inspect}"
+      end
     end
   end
 
@@ -68,10 +70,11 @@ namespace :db_charmer do
 end
 
 def drop_core_and_sub_database(config)
-  drop_database(config)
+  drop_database(config) unless config['exclude_from_rake_create_drop']
   config.each_value do | sub_config |
     next unless sub_config.is_a?(Hash)
     next unless sub_config['database']
+    next if sub_config['exclude_from_rake_create_drop']
     begin
       drop_database(sub_config)
     rescue
